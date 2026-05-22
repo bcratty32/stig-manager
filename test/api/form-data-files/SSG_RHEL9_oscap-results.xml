@@ -1,0 +1,28 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<Benchmark xmlns="http://checklists.nist.gov/xccdf/1.2"
+           id="xccdf_org.ssgproject.content_benchmark_RHEL-9">
+  <TestResult id="xccdf_org.open-scap.scanner_testresult_1"
+              start-time="2024-01-15T10:00:00"
+              end-time="2024-01-15T10:05:00"
+              version="0.1.71">
+    <benchmark href="SSG_RHEL9_test-xccdf.xml"
+               id="xccdf_org.ssgproject.content_benchmark_RHEL-9"/>
+    <profile idref="xccdf_org.ssgproject.content_profile_stig"/>
+    <target>test-host.example.com</target>
+    <target-address>192.168.1.100</target-address>
+    <rule-result idref="xccdf_org.ssgproject.content_rule_accounts_password_minlen_login_defs"
+                 time="2024-01-15T10:01:00" severity="medium" weight="10.0">
+      <result>pass</result>
+      <check system="http://oval.mitre.org/XMLSchema/oval-definitions-5">
+        <check-content-ref href="#oval%3Assg-accounts_password_minlen_login_defs%3Adef%3A1"/>
+      </check>
+    </rule-result>
+    <rule-result idref="xccdf_org.ssgproject.content_rule_accounts_max_concurrent_login_sessions"
+                 time="2024-01-15T10:01:30" severity="low" weight="10.0">
+      <result>fail</result>
+      <check system="http://oval.mitre.org/XMLSchema/oval-definitions-5">
+        <check-content-ref href="#oval%3Assg-accounts_max_concurrent_login_sessions%3Adef%3A1"/>
+      </check>
+    </rule-result>
+  </TestResult>
+</Benchmark>

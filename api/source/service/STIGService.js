@@ -836,7 +836,7 @@ STR_TO_DATE(:benchmarkDateSql, '%Y-%m-%d'),
       ])
       
       for (const ident of idents) {
-        if (ident.system === 'http://iase.disa.mil/cci' || ident.system === 'http://cyber.mil/cci') {
+        if (ident.system === 'http://iase.disa.mil/cci' || ident.system === 'http://cyber.mil/cci' || ident.system === 'https://public.cyber.mil/stigs/cci/') {
           dml.tempRuleCci.binds.push([
             rule.ruleId,
             ident.ident.replace('CCI-', '')])

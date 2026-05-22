@@ -3756,7 +3756,7 @@ paths:
     post:
       tags:
         - STIG
-      summary: Import a STIG Benchmark
+      summary: Import a STIG or SSG Benchmark
       operationId: importBenchmark
       parameters:
         - name: clobber
@@ -3765,6 +3765,15 @@ paths:
           schema:
             type: boolean
             default: false
+        - name: profileId
+          in: query
+          description: >
+            Import only the rules selected by the specified XCCDF profile ID.
+            When set, the imported revision release is suffixed with the profile
+            short name to keep profile-filtered revisions distinct.
+            Applies to both standalone XCCDF and SCAP data stream files.
+          schema:
+            type: string
         - $ref: '#/components/parameters/ElevateQuery'
       requestBody:
         required: true
@@ -3783,6 +3792,64 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/RevisionPost'
+        default:
+          description: unexpected error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+      security:
+        - oauth:
+            - 'stig-manager:stig'
+  '/stigs/benchmark/profiles':
+    post:
+      tags:
+        - STIG
+      summary: List profiles in an uploaded XCCDF or SCAP data stream file
+      description: >
+        Upload an XCCDF or SCAP data stream file and receive the list of
+        XCCDF profiles it contains. Use the returned profileId values with the
+        POST /stigs endpoint to import a profile-filtered benchmark.
+      operationId: getBenchmarkProfiles
+      parameters:
+        - $ref: '#/components/parameters/ElevateQuery'
+      requestBody:
+        required: true
+        content:
+          multipart/form-data:
+            schema:
+              type: object
+              properties:
+                importFile:
+                  type: string
+                  format: binary
+      responses:
+        '200':
+          description: Benchmark profile list
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  benchmarkId:
+                    type: string
+                  title:
+                    type: string
+                    nullable: true
+                  profiles:
+                    type: array
+                    items:
+                      type: object
+                      properties:
+                        profileId:
+                          type: string
+                        title:
+                          type: string
+                        description:
+                          type: string
+                          nullable: true
+                        selectedRuleCount:
+                          type: integer
         default:
           description: unexpected error
           content:

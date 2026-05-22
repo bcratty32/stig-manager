@@ -1,0 +1,61 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<data-stream-collection xmlns="http://scap.nist.gov/schema/scap/source/1.2"
+                        xmlns:xlink="http://www.w3.org/1999/xlink"
+                        id="scap_org.ssgproject.content_collection_RHEL-9">
+  <data-stream id="scap_org.ssgproject.content_datastream_RHEL-9">
+    <checklists>
+      <component-ref id="scap_org.ssgproject.content_cref_xccdf_RHEL-9"
+                     xlink:href="#scap_org.ssgproject.content_comp_xccdf_RHEL-9"/>
+    </checklists>
+  </data-stream>
+  <component id="scap_org.ssgproject.content_comp_xccdf_RHEL-9">
+    <Benchmark xmlns="http://checklists.nist.gov/xccdf/1.2"
+               xmlns:dc="http://purl.org/dc/elements/1.1/"
+               id="xccdf_org.ssgproject.content_benchmark_RHEL-9-DS"
+               resolved="true" xml:lang="en-US">
+      <status date="2024-01-15">draft</status>
+      <title>Guide to the Secure Configuration of Red Hat Enterprise Linux 9 (SCAP DS)</title>
+      <description>SCAP data stream wrapped SSG benchmark for RHEL 9.</description>
+      <plain-text id="release-info">Release: 1 Benchmark Date: 15 Jan 2024</plain-text>
+      <version>0.1.71</version>
+
+      <Profile id="xccdf_org.ssgproject.content_profile_stig">
+        <title>DISA STIG for Red Hat Enterprise Linux 9</title>
+        <description>DISA STIG profile for RHEL 9</description>
+        <select idref="xccdf_org.ssgproject.content_rule_accounts_password_minlen_login_defs" selected="true"/>
+        <select idref="xccdf_org.ssgproject.content_rule_accounts_max_concurrent_login_sessions" selected="true"/>
+      </Profile>
+
+      <Group id="xccdf_org.ssgproject.content_group_accounts">
+        <title>Protect Accounts by Restricting Password-Based Login</title>
+        <description>Overly-simple or commonly-used passwords provide attackers with access to systems.</description>
+
+        <Rule id="xccdf_org.ssgproject.content_rule_accounts_password_minlen_login_defs" severity="medium" weight="10.0">
+          <version>RHEL-09-611090</version>
+          <title>RHEL 9 must enforce a minimum 15-character password length.</title>
+          <description>The minimum password length must be at least 15 characters.</description>
+          <ident system="https://public.cyber.mil/stigs/cci/">CCI-000205</ident>
+          <fixtext fixref="F-001_fix">Configure RHEL 9 to enforce a minimum 15-character password length.</fixtext>
+          <fix id="F-001_fix"/>
+          <check system="http://oval.mitre.org/XMLSchema/oval-definitions-5">
+            <check-content-ref href="#oval%3Assg-accounts_password_minlen_login_defs%3Adef%3A1"
+                               name="oval:ssg-accounts_password_minlen_login_defs:def:1"/>
+          </check>
+        </Rule>
+
+        <Rule id="xccdf_org.ssgproject.content_rule_accounts_max_concurrent_login_sessions" severity="low" weight="10.0">
+          <version>RHEL-09-412020</version>
+          <title>RHEL 9 must limit the number of concurrent sessions to 10.</title>
+          <description>Operating system management includes the ability to control the number of users and user sessions that utilize an operating system.</description>
+          <ident system="https://public.cyber.mil/stigs/cci/">CCI-000054</ident>
+          <fixtext fixref="F-002_fix">Configure RHEL 9 to limit the number of concurrent sessions.</fixtext>
+          <fix id="F-002_fix"/>
+          <check system="http://oval.mitre.org/XMLSchema/oval-definitions-5">
+            <check-content-ref href="#oval%3Assg-accounts_max_concurrent_login_sessions%3Adef%3A1"
+                               name="oval:ssg-accounts_max_concurrent_login_sessions:def:1"/>
+          </check>
+        </Rule>
+      </Group>
+    </Benchmark>
+  </component>
+</data-stream-collection>
