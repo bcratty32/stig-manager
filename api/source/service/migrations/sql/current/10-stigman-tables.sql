@@ -241,7 +241,7 @@ DROP TABLE IF EXISTS `current_rev`;
 CREATE TABLE `current_rev` (
   `revId` varchar(255) NOT NULL,
   `benchmarkId` varchar(255) CHARACTER SET utf8mb4 COLLATE utf8mb4_0900_as_cs DEFAULT NULL,
-  `version` int NOT NULL,
+  `version` varchar(45) NOT NULL,
   `release` varchar(45) NOT NULL,
   `benchmarkDate` varchar(45) DEFAULT NULL,
   `benchmarkDateSql` date DEFAULT NULL,
@@ -538,7 +538,7 @@ DROP TABLE IF EXISTS `revision`;
 CREATE TABLE `revision` (
   `revId` varchar(255) NOT NULL,
   `benchmarkId` varchar(255) CHARACTER SET utf8mb4 COLLATE utf8mb4_0900_as_cs DEFAULT NULL,
-  `version` int NOT NULL,
+  `version` varchar(45) NOT NULL,
   `release` varchar(45) NOT NULL,
   `revisionStr` varchar(45) GENERATED ALWAYS AS (concat(_utf8mb4'V',`version`,_utf8mb4'R',`release`)) VIRTUAL,
   `benchmarkDate` varchar(45) DEFAULT NULL,

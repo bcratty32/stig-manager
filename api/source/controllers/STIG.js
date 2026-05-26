@@ -10,18 +10,16 @@ module.exports.importBenchmark = async function importManualBenchmark (req, res,
     if (!req.query.elevate) throw new SmError.PrivilegeError()
     const extension = req.file.originalname.substring(req.file.originalname.lastIndexOf(".")+1)
     const clobber = req.query.clobber ?? false
+    const profileId = req.query.profileId ?? null
     if (extension.toLowerCase() != 'xml') {
       throw new SmError.ClientError(`File extension .${extension} not supported`)
     }
     let benchmark
     try {
-      benchmark = parsers.benchmarkFromXccdf(req.file.buffer)
+      benchmark = parsers.benchmarkFromXccdf(req.file.buffer, { filterByProfileId: profileId })
     }
     catch(err){
       throw new SmError.ClientError(err.message)
-    }
-    if (benchmark.scap) {
-      throw new SmError.UnprocessableError('SCAP Benchmarks are not imported.')
     }
 
     const markingMatch = req.file.originalname.match(/^(CUI|U|FOUO)_/)
@@ -29,6 +27,27 @@ module.exports.importBenchmark = async function importManualBenchmark (req, res,
 
     const revision = await STIGService.insertManualBenchmark(benchmark, clobber, res.svcStatus)
     res.json(revision)
+  }
+  catch(err) {
+    next(err)
+  }
+}
+
+module.exports.getBenchmarkProfiles = async function getBenchmarkProfiles (req, res, next) {
+  try {
+    if (!req.query.elevate) throw new SmError.PrivilegeError()
+    const extension = req.file.originalname.substring(req.file.originalname.lastIndexOf(".")+1)
+    if (extension.toLowerCase() != 'xml') {
+      throw new SmError.ClientError(`File extension .${extension} not supported`)
+    }
+    let result
+    try {
+      result = parsers.profilesFromXccdf(req.file.buffer)
+    }
+    catch(err) {
+      throw new SmError.ClientError(err.message)
+    }
+    res.json(result)
   }
   catch(err) {
     next(err)

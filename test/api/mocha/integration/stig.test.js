@@ -363,3 +363,185 @@ describe(`POST - importBenchmark - /stigs`, () => {
     })
   })
 })
+
+describe('SSG benchmark import - POST /stigs', () => {
+
+  const ssgBenchmarkId = 'xccdf_org.ssgproject.content_benchmark_RHEL-9'
+  const ssgDsBenchmarkId = 'xccdf_org.ssgproject.content_benchmark_RHEL-9-DS'
+
+  async function uploadSsgFile(filename, queryParams = '') {
+    const __filename = fileURLToPath(import.meta.url)
+    const __dirname = path.dirname(__filename)
+    const filePath = path.join(__dirname, `../../form-data-files/${filename}`)
+    const fileContent = fs.readFileSync(filePath, 'utf-8')
+    const blob = new Blob([fileContent], { type: 'text/xml' })
+    const formData = new FormData()
+    formData.append('importFile', blob, filename)
+    return fetch(`${config.baseUrl}/stigs?elevate=true&clobber=true${queryParams}`, {
+      method: 'POST',
+      headers: { Authorization: `Bearer ${user.token}` },
+      body: formData,
+    })
+  }
+
+  async function uploadForProfiles(filename) {
+    const __filename = fileURLToPath(import.meta.url)
+    const __dirname = path.dirname(__filename)
+    const filePath = path.join(__dirname, `../../form-data-files/${filename}`)
+    const fileContent = fs.readFileSync(filePath, 'utf-8')
+    const blob = new Blob([fileContent], { type: 'text/xml' })
+    const formData = new FormData()
+    formData.append('importFile', blob, filename)
+    return fetch(`${config.baseUrl}/stigs/benchmark/profiles?elevate=true`, {
+      method: 'POST',
+      headers: { Authorization: `Bearer ${user.token}` },
+      body: formData,
+    })
+  }
+
+  describe('SSG standalone XCCDF - import all rules', () => {
+
+    after(async () => {
+      await utils.deleteStig(ssgBenchmarkId)
+    })
+
+    it('should import SSG XCCDF benchmark successfully', async () => {
+      const res = await uploadSsgFile('SSG_RHEL9_test-xccdf.xml')
+      expect(res.status).to.eql(200)
+      const data = await res.json()
+      expect(data.benchmarkId).to.eql(ssgBenchmarkId)
+      expect(data.revisionStr).to.eql('V0.1.71R1')
+      expect(data.action).to.be.oneOf(['inserted', 'replaced'])
+    })
+
+    it('should return imported SSG benchmark with correct rule count', async () => {
+      const res = await utils.executeRequest(
+        `${config.baseUrl}/stigs/${ssgBenchmarkId}/revisions/V0.1.71R1/rules`,
+        'GET', user.token
+      )
+      expect(res.status).to.eql(200)
+      expect(res.body).to.be.an('array').of.length(2)
+    })
+
+    it('should have CCI mapped for SSG rules (https ident system)', async () => {
+      const res = await utils.executeRequest(
+        `${config.baseUrl}/stigs/${ssgBenchmarkId}/revisions/V0.1.71R1/rules?projection=ccis`,
+        'GET', user.token
+      )
+      expect(res.status).to.eql(200)
+      const ruleWithCci = res.body.find(r => r.ccis && r.ccis.length > 0)
+      expect(ruleWithCci, 'at least one rule should have CCI mappings').to.exist
+    })
+  })
+
+  describe('SSG XCCDF - import with profile filter (STIG profile)', () => {
+
+    const profileFilteredRevStr = 'V0.1.71R1-stig'
+
+    after(async () => {
+      await utils.deleteStig(ssgBenchmarkId)
+    })
+
+    it('should import SSG XCCDF benchmark filtered to STIG profile', async () => {
+      const profileId = 'xccdf_org.ssgproject.content_profile_stig'
+      const res = await uploadSsgFile('SSG_RHEL9_test-xccdf.xml', `&profileId=${encodeURIComponent(profileId)}`)
+      expect(res.status).to.eql(200)
+      const data = await res.json()
+      expect(data.benchmarkId).to.eql(ssgBenchmarkId)
+      expect(data.revisionStr).to.eql(profileFilteredRevStr)
+    })
+
+    it('should have only STIG-profile-selected rules (2 of 2)', async () => {
+      const res = await utils.executeRequest(
+        `${config.baseUrl}/stigs/${ssgBenchmarkId}/revisions/${profileFilteredRevStr}/rules`,
+        'GET', user.token
+      )
+      expect(res.status).to.eql(200)
+      expect(res.body).to.be.an('array').of.length(2)
+    })
+  })
+
+  describe('SSG XCCDF - import with profile filter (CIS L1 profile)', () => {
+
+    const profileFilteredRevStr = 'V0.1.71R1-cis_l1_server'
+
+    after(async () => {
+      await utils.deleteStig(ssgBenchmarkId)
+    })
+
+    it('should import SSG XCCDF benchmark filtered to CIS L1 profile', async () => {
+      const profileId = 'xccdf_org.ssgproject.content_profile_cis_l1_server'
+      const res = await uploadSsgFile('SSG_RHEL9_test-xccdf.xml', `&profileId=${encodeURIComponent(profileId)}`)
+      expect(res.status).to.eql(200)
+      const data = await res.json()
+      expect(data.benchmarkId).to.eql(ssgBenchmarkId)
+      expect(data.revisionStr).to.eql(profileFilteredRevStr)
+    })
+
+    it('should have only CIS-L1-profile-selected rules (1 of 2)', async () => {
+      const res = await utils.executeRequest(
+        `${config.baseUrl}/stigs/${ssgBenchmarkId}/revisions/${profileFilteredRevStr}/rules`,
+        'GET', user.token
+      )
+      expect(res.status).to.eql(200)
+      expect(res.body).to.be.an('array').of.length(1)
+    })
+  })
+
+  describe('SSG XCCDF - profile listing endpoint', () => {
+
+    it('should return profiles from SSG XCCDF file', async () => {
+      const res = await uploadForProfiles('SSG_RHEL9_test-xccdf.xml')
+      expect(res.status).to.eql(200)
+      const data = await res.json()
+      expect(data.benchmarkId).to.eql(ssgBenchmarkId)
+      expect(data.profiles).to.be.an('array').of.length(2)
+      const profileIds = data.profiles.map(p => p.profileId)
+      expect(profileIds).to.include('xccdf_org.ssgproject.content_profile_stig')
+      expect(profileIds).to.include('xccdf_org.ssgproject.content_profile_cis_l1_server')
+    })
+
+    it('should return profiles from SSG SCAP data stream file', async () => {
+      const res = await uploadForProfiles('SSG_RHEL9_test-ds.xml')
+      expect(res.status).to.eql(200)
+      const data = await res.json()
+      expect(data.benchmarkId).to.eql(ssgDsBenchmarkId)
+      expect(data.profiles).to.be.an('array').of.length(1)
+      expect(data.profiles[0].profileId).to.eql('xccdf_org.ssgproject.content_profile_stig')
+      expect(data.profiles[0].selectedRuleCount).to.eql(2)
+    })
+  })
+
+  describe('SSG SCAP data stream - import', () => {
+
+    after(async () => {
+      await utils.deleteStig(ssgDsBenchmarkId)
+    })
+
+    it('should import SCAP data stream (previously rejected) successfully', async () => {
+      const res = await uploadSsgFile('SSG_RHEL9_test-ds.xml')
+      expect(res.status).to.eql(200)
+      const data = await res.json()
+      expect(data.benchmarkId).to.eql(ssgDsBenchmarkId)
+      expect(data.revisionStr).to.eql('V0.1.71R1')
+      expect(data.action).to.be.oneOf(['inserted', 'replaced'])
+    })
+
+    it('should return correct rule count from SCAP data stream', async () => {
+      const res = await utils.executeRequest(
+        `${config.baseUrl}/stigs/${ssgDsBenchmarkId}/revisions/V0.1.71R1/rules`,
+        'GET', user.token
+      )
+      expect(res.status).to.eql(200)
+      expect(res.body).to.be.an('array').of.length(2)
+    })
+  })
+
+  describe('SSG - invalid profileId returns 400', () => {
+
+    it('should reject unknown profileId with 400', async () => {
+      const res = await uploadSsgFile('SSG_RHEL9_test-xccdf.xml', '&profileId=nonexistent_profile')
+      expect(res.status).to.eql(400)
+    })
+  })
+})
