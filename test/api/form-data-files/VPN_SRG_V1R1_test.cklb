@@ -1,0 +1,184 @@
+{
+  "title": "test-vpn-gateway",
+  "id": "f563e311-6736-423c-8c8a-bedb69862096",
+  "active": false,
+  "mode": 1,
+  "has_path": true,
+  "target_data": {
+    "target_type": "Non-Computing",
+    "host_name": "test-vpn-gateway",
+    "ip_address": "10.0.0.1",
+    "mac_address": "",
+    "fqdn": "vpn-gw.example.mil",
+    "comments": "",
+    "role": "None",
+    "is_web_database": false,
+    "technology_area": "",
+    "web_db_site": "",
+    "web_db_instance": ""
+  },
+  "stigs": [
+    {
+      "stig_name": "Virtual Private Network (VPN) Security Requirements Guide",
+      "display_name": "Virtual Private Network (VPN)",
+      "stig_id": "VPN_SRG_TEST",
+      "version": "1",
+      "release_info": "Release: 1 Benchmark Date: 19 Jul 2019",
+      "uuid": "237e5744-3e4b-4715-99af-8914b07ee1ee",
+      "reference_identifier": "0000",
+      "size": 3,
+      "rules": [
+        {
+          "uuid": "6420cc91-354a-4027-9bf6-cc6f22911f6a",
+          "stig_uuid": "237e5744-3e4b-4715-99af-8914b07ee1ee",
+          "target_key": null,
+          "stig_ref": null,
+          "group_id": "V-97041",
+          "rule_id": "SV-106179r1",
+          "rule_id_src": "SV-106179r1_rule",
+          "weight": 10.0,
+          "classification": "UNCLASSIFIED",
+          "severity": "medium",
+          "rule_version": "SRG-NET-000019-VPN-000040",
+          "group_title": "SRG-NET-000019-VPN-000040",
+          "rule_title": "The VPN Gateway must ensure inbound and outbound traffic is configured with a security policy in compliance with information flow control policies.",
+          "fix_text": "Configure the VPN Gateway to ensure inbound and outbound traffic is configured with a security policy in compliance with information flow control policies (e.g., IPsec policy configuration). Also, configure the VPN gateway to forward encapsulated or encrypted traffic received from other enclaves with different security policies to the perimeter firewall and IDPS before traffic is passed to the private network.",
+          "false_positives": "",
+          "false_negatives": "",
+          "discussion": "Unrestricted traffic may contain malicious traffic which poses a threat to an enclave or to other connected networks. Additionally, unrestricted traffic may transit a network, which uses bandwidth and other resources.\n\nVPN traffic received from another enclave with different security policy or level of trust must not bypass be inspected by the firewall before being forwarded to the private network.",
+          "check_content": "Verify the VPN Gateway has an inbound and outbound traffic security policy which is in compliance with information flow control policies (e.g., IPsec policy configuration).\n\nReview network device configurations and topology diagrams. Verify encapsulated or encrypted traffic received from other enclaves with different security policies terminate at the perimeter for filtering and content inspection by a firewall and IDPS before gaining access to the private network.\n\nIf the VPN Gateway does not ensure inbound and outbound traffic is configured with a security policy in compliance with information flow control policies, this is a finding.",
+          "documentable": false,
+          "mitigations": "",
+          "potential_impacts": "",
+          "third_party_tools": "",
+          "mitigation_control": "",
+          "responsibility": "",
+          "security_override_guidance": "",
+          "ia_controls": null,
+          "check_content_ref": {
+            "href": "",
+            "name": "M"
+          },
+          "legacy_ids": [],
+          "group_tree": [
+            {
+              "id": "V-97041",
+              "title": "SRG-NET-000019-VPN-000040",
+              "description": "<GroupDescription></GroupDescription>"
+            }
+          ],
+          "createdAt": "2024-06-01T00:00:00.000Z",
+          "updatedAt": "2024-06-10T00:00:00.000Z",
+          "STIGUuid": "237e5744-3e4b-4715-99af-8914b07ee1ee",
+          "status": "not_a_finding",
+          "overrides": {},
+          "comments": "Annual review completed 2024-06-01.",
+          "finding_details": "Reviewed the VPN Gateway policy configuration. All inbound and outbound traffic flows are configured with a security policy compliant with the enclave security policy.",
+          "ccis": [
+            "CCI-001414"
+          ]
+        },
+        {
+          "uuid": "e560f72c-578f-47d4-898c-62d7f5fc3723",
+          "stig_uuid": "237e5744-3e4b-4715-99af-8914b07ee1ee",
+          "target_key": null,
+          "stig_ref": null,
+          "group_id": "V-97043",
+          "rule_id": "SV-106181r1",
+          "rule_id_src": "SV-106181r1_rule",
+          "weight": 10.0,
+          "classification": "UNCLASSIFIED",
+          "severity": "medium",
+          "rule_version": "SRG-NET-000041-VPN-000110",
+          "group_title": "SRG-NET-000041-VPN-000110",
+          "rule_title": "The Remote Access VPN Gateway and/or client must display the Standard Mandatory DoD Notice and Consent Banner before granting remote access to the network.",
+          "fix_text": "Configure the Remote Access VPN to display the Standard Mandatory DoD Notice and Consent Banner in accordance with DoD policy before granting access to the device. Use the following verbiage for applications that can accommodate banners of 1300 characters:\n\n\"You are accessing a U.S. Government (USG) Information System (IS) that is provided for USG-authorized use only.\n\nBy using this IS (which includes any device attached to this IS), you consent to the following conditions:\n-The USG routinely intercepts and monitors communications on this IS for purposes including, but not limited to, penetration testing, COMSEC monitoring, network operations and defense, personnel misconduct (PM), law enforcement (LE), and counterintelligence (CI) investigations.\n-At any time, the USG may inspect and seize data stored on this IS.\n-Communications using, or data stored on, this IS are not private, are subject to routine monitoring, interception, and search, and may be disclosed or used for any USG-authorized purpose.\n-This IS includes security measures (e.g., authentication and access controls) to protect USG interests--not for your personal benefit or privacy.\n-Notwithstanding the above, using this IS does not constitute consent to PM, LE or CI investigative searching or monitoring of the content of privileged communications, or work product, related to personal representation or services by attorneys, psychotherapists, or clergy, and their assistants. Such communications and work product are private and confidential. See User Agreement for details.\"\n\nUse the following verbiage for operating systems that have severe limitations on the number of characters that can be displayed in the banner:\n\"I've read & consent to terms in IS user agreem't.\"",
+          "false_positives": "",
+          "false_negatives": "",
+          "discussion": "Display of a standardized and approved use notification before granting access to the network ensures privacy and security notification verbiage used is consistent with applicable federal laws, Executive Orders, directives, policies, regulations, standards, and guidance.\n\nIn most VPN implementations, the banner is configured in the management backplane (NDM SRG) and serves as the presentation for the VPN client connection as well as for administrator logon to the device management tool/backplane.\n\nSystem use notifications are required only for access via logon interfaces with human users and are not required when such human interfaces do not exist. This requirement applies to VPN gateways that have the concept of a user account and have the logon function residing on the VPN gateway.\n\nThe banner must be formatted in accordance with applicable DoD policy. Use the following verbiage for VPN gateways that can accommodate banners of 1300 characters:\n\n\"You are accessing a U.S. Government (USG) Information System (IS) that is provided for USG-authorized use only.\n\nBy using this IS (which includes any device attached to this IS), you consent to the following conditions:\n\n-The USG routinely intercepts and monitors communications on this IS for purposes including, but not limited to, penetration testing, COMSEC monitoring, network operations and defense, personnel misconduct (PM), law enforcement (LE), and counterintelligence (CI) investigations.\n\n-At any time, the USG may inspect and seize data stored on this IS.\n\n-Communications using, or data stored on, this IS are not private, are subject to routine monitoring, interception, and search, and may be disclosed or used for any USG-authorized purpose.\n\n-This IS includes security measures (e.g., authentication and access controls) to protect USG interests--not for your personal benefit or privacy.\n\n-Notwithstanding the above, using this IS does not constitute consent to PM, LE or CI investigative searching or monitoring of the content of privileged communications, or work product, related to personal representation or services by attorneys, psychotherapists, or clergy, and their assistants. Such communications and work product are private and confidential. See User Agreement for details.\"\n \nUse the following verbiage for operating systems that have severe limitations on the number of characters that can be displayed in the banner:\n\n\"I've read & consent to terms in IS user agreem't.\"",
+          "check_content": "If the user/remote client connection banner is the same as the banner configured as part of the NDM SRG, then this is not applicable.\n\nDetermine if the network device is configured to present a DoD-approved banner that is formatted in accordance with DoD policy. \n\nIf the Remote Access VPN Gateway or VPN client does not display the Standard Mandatory DoD Notice and Consent Banner before granting remote access to the network, this is a finding.",
+          "documentable": false,
+          "mitigations": "",
+          "potential_impacts": "",
+          "third_party_tools": "",
+          "mitigation_control": "",
+          "responsibility": "",
+          "security_override_guidance": "",
+          "ia_controls": null,
+          "check_content_ref": {
+            "href": "",
+            "name": "M"
+          },
+          "legacy_ids": [],
+          "group_tree": [
+            {
+              "id": "V-97043",
+              "title": "SRG-NET-000041-VPN-000110",
+              "description": "<GroupDescription></GroupDescription>"
+            }
+          ],
+          "createdAt": "2024-06-01T00:00:00.000Z",
+          "updatedAt": "2024-06-10T00:00:00.000Z",
+          "STIGUuid": "237e5744-3e4b-4715-99af-8914b07ee1ee",
+          "status": "open",
+          "overrides": {},
+          "comments": "Remediation ticket INC-20240610 opened.",
+          "finding_details": "Reviewed the VPN Gateway configuration. The Remote Access VPN Gateway does not display the Standard Mandatory DoD Notice and Consent Banner. Finding confirmed.",
+          "ccis": [
+            "CCI-000048"
+          ]
+        },
+        {
+          "uuid": "1e94bfaa-e9fc-437a-80eb-d89a578a9738",
+          "stig_uuid": "237e5744-3e4b-4715-99af-8914b07ee1ee",
+          "target_key": null,
+          "stig_ref": null,
+          "group_id": "V-97045",
+          "rule_id": "SV-106183r1",
+          "rule_id_src": "SV-106183r1_rule",
+          "weight": 10.0,
+          "classification": "UNCLASSIFIED",
+          "severity": "medium",
+          "rule_version": "SRG-NET-000042-VPN-000120",
+          "group_title": "SRG-NET-000042-VPN-000120",
+          "rule_title": "The Remote Access VPN Gateway and/or client must enforce a policy to retain the Standard Mandatory DoD Notice and Consent Banner on the screen until users acknowledge the usage conditions and take explicit actions to log on for further access.",
+          "fix_text": "Configure the Remote Access VPN Gateway and/or client to retain the Standard Mandatory DoD-approved Notice and Consent Banner on the screen until users acknowledge the usage conditions and take explicit actions to log on for further access.",
+          "false_positives": "",
+          "false_negatives": "",
+          "discussion": "The banner must be acknowledged by the user prior to allowing the user access to the network. This provides assurance that the user has seen the message and accepted the conditions for access. If the consent banner is not acknowledged by the user, DoD will not be in compliance with system use notifications required by law. \n\nThe banner is usually configured in NDM for client presentation as well as local logon.\n\nTo establish acceptance of the application usage policy, a click-through banner at application logon is required. The VPN gateway must prevent further activity until the user executes a positive action to manifest agreement by clicking on a box indicating \"OK\". \n\nThis applies to gateways that have the concept of a user account and have the login function residing on the gateway or the gateway acts as a user intermediary.",
+          "check_content": "If the user/remote client connection banner is the same as the banner configured as part of the NDM SRG, then this is not applicable.\n\nVerify the ALG retains the Standard Mandatory DoD-approved Notice and Consent Banner on the screen until users acknowledge the usage conditions and takes explicit actions to log on for further access.\n\nIf the Remote Access VPN Gateway and/or client does not retain the Standard Mandatory DoD-approved Notice and Consent Banner on the screen until users acknowledge the usage conditions and take explicit actions to log on for further access, this is a finding.",
+          "documentable": false,
+          "mitigations": "",
+          "potential_impacts": "",
+          "third_party_tools": "",
+          "mitigation_control": "",
+          "responsibility": "",
+          "security_override_guidance": "",
+          "ia_controls": null,
+          "check_content_ref": {
+            "href": "",
+            "name": "M"
+          },
+          "legacy_ids": [],
+          "group_tree": [
+            {
+              "id": "V-97045",
+              "title": "SRG-NET-000042-VPN-000120",
+              "description": "<GroupDescription></GroupDescription>"
+            }
+          ],
+          "createdAt": "2024-06-01T00:00:00.000Z",
+          "updatedAt": "2024-06-10T00:00:00.000Z",
+          "STIGUuid": "237e5744-3e4b-4715-99af-8914b07ee1ee",
+          "status": "not_applicable",
+          "overrides": {},
+          "comments": "NAA approved by AO on 2024-01-15.",
+          "finding_details": "This requirement is not applicable to this deployment. The environment uses site-to-site VPN only; no remote access clients are in scope.",
+          "ccis": [
+            "CCI-000050"
+          ]
+        }
+      ]
+    }
+  ]
+}
