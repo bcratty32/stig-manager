@@ -13,7 +13,7 @@ SM.StigRevision.RevisionMenuBtn = Ext.extend(Ext.Button, {
 SM.StigRevision.RevisionMenu = Ext.extend(Ext.menu.Menu, {
   load: async function (record) {
     this.removeAll()
-    const re = /^V([\d,\.]{1,5})R([\d,\.]{1,5})$/
+    const re = /^V([\d.]+)R([\d.]+(-[A-Za-z0-9_]+)?)$/
 
     for (const revision of record.data.revisions) {
       const matches = re.exec(revision.revisionStr)

@@ -36,6 +36,7 @@ module.exports.importBenchmark = async function importManualBenchmark (req, res,
 module.exports.getBenchmarkProfiles = async function getBenchmarkProfiles (req, res, next) {
   try {
     if (!req.query.elevate) throw new SmError.PrivilegeError()
+    if (!req.file) throw new SmError.ClientError('No file provided')
     const extension = req.file.originalname.substring(req.file.originalname.lastIndexOf(".")+1)
     if (extension.toLowerCase() != 'xml') {
       throw new SmError.ClientError(`File extension .${extension} not supported`)

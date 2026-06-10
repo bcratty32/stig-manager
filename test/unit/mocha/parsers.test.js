@@ -111,6 +111,25 @@ describe('parsers.benchmarkFromXccdf - SCAP data stream', () => {
   })
 })
 
+describe('parsers.benchmarkFromXccdf - nested SSG groups', () => {
+
+  it('should collect rules from nested groups into the parent group', () => {
+    const data = fs.readFileSync(path.join(formDataDir, 'SSG_RHEL9_nested-xccdf.xml'))
+    const result = benchmarkFromXccdf(data)
+    const totalRules = result.revision.groups.reduce((n, g) => n + g.rules.length, 0)
+    expect(totalRules).to.equal(2)
+  })
+
+  it('should not crash when a top-level group has no direct rules, only nested ones', () => {
+    const data = fs.readFileSync(path.join(formDataDir, 'SSG_RHEL9_nested-xccdf.xml'))
+    const result = benchmarkFromXccdf(data)
+    expect(result.revision.groups).to.be.an('array').with.length.greaterThan(0)
+    result.revision.groups.forEach(g => {
+      expect(g.rules).to.be.an('array')
+    })
+  })
+})
+
 describe('parsers.profilesFromXccdf', () => {
 
   it('should return profiles from SSG XCCDF', () => {

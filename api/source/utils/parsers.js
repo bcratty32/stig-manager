@@ -33,21 +33,6 @@ function extractBenchmarkFromParsed(j) {
   throw new Error("Cannot parse XML document as STIG, SCAP, or SSG benchmark.")
 }
 
-function parseReleaseInfo(bIn) {
-  const plainTexts = bIn['plain-text'] || []
-  const releaseText = plainTexts.find(pt => pt.id === 'release-info')?._ ||
-                      plainTexts[0]?._ || ''
-  const releaseMatch = /Release:\s+(\S+)\s+Benchmark Date:\s+(.*)/g.exec(releaseText)
-  if (releaseMatch) {
-    const [, release, benchmarkDate] = releaseMatch
-    return { release, benchmarkDate, benchmarkDate8601: benchmarkDateTo8601(benchmarkDate) }
-  }
-  // Fallback for SSG and other non-DISA benchmarks
-  const release = bIn.version?.[0]?._ || '1'
-  const benchmarkDate = bIn.status?.[0]?.date || null
-  return { release, benchmarkDate, benchmarkDate8601: benchmarkDate }
-}
-
 function benchmarkDateTo8601(benchmarkDate) {
   const monthToNum = {
     'Jan': '01', 'January': '01',
@@ -72,174 +57,195 @@ function ssgProfileShortName(profileId) {
   return match ? match[1] : profileId
 }
 
+function parseReleaseInfo(bIn) {
+  const plainTexts = bIn['plain-text'] || []
+  const releaseText = plainTexts.find(pt => pt.id === 'release-info')?._ ||
+                      plainTexts[0]?._ || ''
+  const releaseMatch = /Release:\s+(\S+)\s+Benchmark Date:\s+(.*)/g.exec(releaseText)
+  if (releaseMatch) {
+    const [, release, benchmarkDate] = releaseMatch
+    return { release, benchmarkDate, benchmarkDate8601: benchmarkDateTo8601(benchmarkDate) }
+  }
+  // Fallback for SSG and other non-DISA benchmarks
+  const release = bIn.version?.[0]?._ || '1'
+  const rawDate = bIn.status?.[0]?.date || null
+  // Strip time component if present (e.g., "2024-01-15T10:00:00" → "2024-01-15")
+  const benchmarkDate8601 = rawDate ? rawDate.split('T')[0] : null
+  return { release, benchmarkDate: rawDate, benchmarkDate8601 }
+}
+
+function isSelected(val) {
+  return val === 'true' || val === true || val === '1' || val === 1
+}
+
+// Shared helper: parse Profile elements into objects with selectedIds Set
+function parseProfileDefs(bIn) {
+  return (bIn.Profile || []).map(profile => ({
+    profileId: profile.id,
+    title: profile.title?.[0]?._ || profile.id,
+    description: profile.description?.[0]?._ || null,
+    selectedIds: new Set(
+      (profile.select || [])
+        .filter(s => isSelected(s.selected))
+        .map(s => s.idref)
+    )
+  }))
+}
+
+function parseRuleDescription(d) {
+  const parsed = {}
+  const propMap = {
+    vulnDiscussion: 'VulnDiscussion',
+    falsePositives: 'FalsePositives',
+    falseNegatives: 'FalseNegatives',
+    documentable: 'Documentable',
+    mitigations: 'Mitigations',
+    severityOverrideGuidance: 'SeverityOverrideGuidance',
+    potentialImpacts: 'PotentialImpacts',
+    thirdPartyTools: 'ThirdPartyTools',
+    mitigationControl: 'MitigationControl',
+    responsibility: 'Responsibility',
+    iacontrols: 'IAControls'
+  }
+  for (const prop in propMap) {
+    const re = new RegExp(`<${propMap[prop]}>([\\s\\S]*)</${propMap[prop]}>`)
+    const result = re.exec(d)
+    parsed[propMap[prop]] = result && result.length > 1 ? result[1] : null
+  }
+  if (parsed.Responsibility) {
+    parsed.Responsibility = parsed.Responsibility.replace(/<\/Responsibility><Responsibility>/g, ', ')
+  }
+  return parsed
+}
+
+function mapRule(rule) {
+  const checks = rule.check ? rule.check.map(check => ({
+    system: check.system,
+    content: check['check-content']?.[0]?._ ||
+             check['check-content-ref']?.[0]?.name ||
+             check['check-content-ref']?.[0]?.href ||
+             null
+  })) : []
+  const fixes = rule.fixtext ? rule.fixtext.map(fix => ({
+    fixref: fix.fixref,
+    text: fix._
+  })) : []
+  const idents = rule.ident ? rule.ident.map(ident => ({
+    ident: ident._,
+    system: ident.system
+  })) : []
+
+  const rawDescription = rule.description?.[0]?._ || null
+  const desc = rawDescription ? parseRuleDescription(rawDescription) : {}
+
+  return {
+    ruleId: rule.id,
+    version: rule.version?.[0]?._ || null,
+    title: rule.title?.[0]?._ || null,
+    severity: rule.severity || null,
+    weight: rule.weight || null,
+    vulnDiscussion: desc.VulnDiscussion || null,
+    falsePositives: desc.FalsePositives || null,
+    falseNegatives: desc.FalseNegatives || null,
+    documentable: desc.Documentable || null,
+    mitigations: desc.Mitigations || null,
+    severityOverrideGuidance: desc.SeverityOverrideGuidance || null,
+    potentialImpacts: desc.PotentialImpacts || null,
+    thirdPartyTools: desc.ThirdPartyTools || null,
+    mitigationControl: desc.MitigationControl || null,
+    responsibility: desc.Responsibility || null,
+    iacontrols: desc.IAControls || null,
+    checks,
+    fixes,
+    idents
+  }
+}
+
+// Recursively collects rules from a group and all nested sub-groups
+function collectRulesFromGroup(group) {
+  const rules = (group.Rule || []).map(mapRule)
+  const nested = (group.Group || []).flatMap(g => collectRulesFromGroup(g))
+  return [...rules, ...nested]
+}
+
 module.exports.benchmarkFromXccdf = function (xccdfData, { filterByProfileId } = {}) {
-  try {
-    const parser = makeXmlParser()
-    const j = parser.parse(xccdfData.toString())
-    const { bIn, isScap } = extractBenchmarkFromParsed(j)
+  const parser = makeXmlParser()
+  const j = parser.parse(xccdfData.toString())
+  const { bIn, isScap } = extractBenchmarkFromParsed(j)
 
-    const profileDefs = (bIn.Profile || []).map(profile => ({
-      profileId: profile.id,
-      title: profile.title?.[0]?._ || profile.id,
-      selectedIds: new Set(
-        (profile.select || [])
-          .filter(s => s.selected === 'true' || s.selected === true)
-          .map(s => s.idref)
-      )
-    }))
+  const profileDefs = parseProfileDefs(bIn)
 
-    let selectedProfile = null
-    if (filterByProfileId) {
-      selectedProfile = profileDefs.find(p => p.profileId === filterByProfileId)
-      if (!selectedProfile) {
-        throw new Error(`Profile "${filterByProfileId}" not found in benchmark. Available profiles: ${profileDefs.map(p => p.profileId).join(', ')}`)
-      }
-    }
-
-    const rawGroups = bIn.Group.map(group => {
-      const rules = group.Rule.map(rule => {
-        const checks = rule.check ? rule.check.map(check => ({
-          system: check.system,
-          content: check['check-content']?.[0]?._ ||
-                   check['check-content-ref']?.[0]?.name ||
-                   check['check-content-ref']?.[0]?.href ||
-                   null
-        })) : []
-        const fixes = rule.fixtext ? rule.fixtext.map(fix => ({
-          fixref: fix.fixref,
-          text: fix._
-        })) : []
-        const idents = rule.ident ? rule.ident.map(ident => ({
-          ident: ident._,
-          system: ident.system
-        })) : []
-
-        function parseRuleDescription(d) {
-          const parsed = {}
-          const propMap = {
-            vulnDiscussion: 'VulnDiscussion',
-            falsePositives: 'FalsePositives',
-            falseNegatives: 'FalseNegatives',
-            documentable: 'Documentable',
-            mitigations: 'Mitigations',
-            severityOverrideGuidance: 'SeverityOverrideGuidance',
-            potentialImpacts: 'PotentialImpacts',
-            thirdPartyTools: 'ThirdPartyTools',
-            mitigationControl: 'MitigationControl',
-            responsibility: 'Responsibility',
-            iacontrols: 'IAControls'
-          }
-          for (const prop in propMap) {
-            const re = new RegExp(`<${propMap[prop]}>([\\s\\S]*)</${propMap[prop]}>`)
-            const result = re.exec(d)
-            parsed[propMap[prop]] = result && result.length > 1 ? result[1] : null
-          }
-          if (parsed.Responsibility) {
-            parsed.Responsibility = parsed.Responsibility.replace(/<\/Responsibility><Responsibility>/g, ', ')
-          }
-          return parsed
-        }
-
-        const rawDescription = rule.description?.[0]?._ || null
-        const desc = rawDescription ? parseRuleDescription(rawDescription) : {}
-
-        return {
-          ruleId: rule.id,
-          version: rule.version?.[0]?._ || null,
-          title: rule.title?.[0]?._ || null,
-          severity: rule.severity || null,
-          weight: rule.weight || null,
-          vulnDiscussion: desc.VulnDiscussion || null,
-          falsePositives: desc.FalsePositives || null,
-          falseNegatives: desc.FalseNegatives || null,
-          documentable: desc.Documentable || null,
-          mitigations: desc.Mitigations || null,
-          severityOverrideGuidance: desc.SeverityOverrideGuidance || null,
-          potentialImpacts: desc.PotentialImpacts || null,
-          thirdPartyTools: desc.ThirdPartyTools || null,
-          mitigationControl: desc.MitigationControl || null,
-          responsibility: desc.Responsibility || null,
-          iacontrols: desc.IAControls || null,
-          checks,
-          fixes,
-          idents
-        }
-      })
-
-      return {
-        groupId: group.id,
-        title: group.title?.[0]?._ || group.id,
-        rules
-      }
-    })
-
-    // Apply profile filter if specified
-    const groups = selectedProfile
-      ? rawGroups
-          .map(group => {
-            if (selectedProfile.selectedIds.has(group.groupId)) {
-              return group
-            }
-            const filteredRules = group.rules.filter(r => selectedProfile.selectedIds.has(r.ruleId))
-            return filteredRules.length > 0 ? { ...group, rules: filteredRules } : null
-          })
-          .filter(Boolean)
-      : rawGroups
-
-    const { release, benchmarkDate, benchmarkDate8601 } = parseReleaseInfo(bIn)
-    const version = bIn.version?.[0]?._ || '1'
-
-    // When filtering by profile, embed the profile short name in the release to keep revisions distinct
-    const effectiveRelease = selectedProfile
-      ? `${release}-${ssgProfileShortName(selectedProfile.profileId)}`
-      : release
-
-    const profiles = profileDefs.map(p => ({ profileId: p.profileId, title: p.title }))
-
-    return {
-      benchmarkId: bIn.id,
-      title: bIn.title?.[0]?._,
-      scap: isScap,
-      profiles,
-      revision: {
-        revisionStr: `V${version}R${effectiveRelease}`,
-        version,
-        release: effectiveRelease,
-        benchmarkDate,
-        benchmarkDate8601,
-        status: bIn.status?.[0]?._ || null,
-        statusDate: bIn.status?.[0]?.date || null,
-        description: bIn.description?.[0]?._ || null,
-        groups
-      }
+  let selectedProfile = null
+  if (filterByProfileId) {
+    selectedProfile = profileDefs.find(p => p.profileId === filterByProfileId)
+    if (!selectedProfile) {
+      throw new Error(`Profile "${filterByProfileId}" not found in benchmark. Available profiles: ${profileDefs.map(p => p.profileId).join(', ')}`)
     }
   }
-  catch (e) {
-    throw e
+
+  const rawGroups = (bIn.Group || []).map(group => ({
+    groupId: group.id,
+    title: group.title?.[0]?._ || group.id,
+    rules: collectRulesFromGroup(group)
+  })).filter(g => g.rules.length > 0)
+
+  // Apply profile filter if specified
+  const groups = selectedProfile
+    ? rawGroups
+        .map(group => {
+          if (selectedProfile.selectedIds.has(group.groupId)) {
+            return group
+          }
+          const filteredRules = group.rules.filter(r => selectedProfile.selectedIds.has(r.ruleId))
+          return filteredRules.length > 0 ? { ...group, rules: filteredRules } : null
+        })
+        .filter(Boolean)
+    : rawGroups
+
+  const { release, benchmarkDate, benchmarkDate8601 } = parseReleaseInfo(bIn)
+  const version = bIn.version?.[0]?._ || '1'
+
+  // When filtering by profile, embed the profile short name in the release to keep revisions distinct
+  const effectiveRelease = selectedProfile
+    ? `${release}-${ssgProfileShortName(selectedProfile.profileId)}`
+    : release
+
+  const profiles = profileDefs.map(p => ({ profileId: p.profileId, title: p.title }))
+
+  return {
+    benchmarkId: bIn.id,
+    title: bIn.title?.[0]?._,
+    scap: isScap,
+    profiles,
+    revision: {
+      revisionStr: `V${version}R${effectiveRelease}`,
+      version,
+      release: effectiveRelease,
+      benchmarkDate,
+      benchmarkDate8601,
+      status: bIn.status?.[0]?._ || null,
+      statusDate: bIn.status?.[0]?.date || null,
+      description: bIn.description?.[0]?._ || null,
+      groups
+    }
   }
 }
 
 module.exports.profilesFromXccdf = function (xccdfData) {
-  try {
-    const parser = makeXmlParser()
-    const j = parser.parse(xccdfData.toString())
-    const { bIn } = extractBenchmarkFromParsed(j)
+  const parser = makeXmlParser()
+  const j = parser.parse(xccdfData.toString())
+  const { bIn } = extractBenchmarkFromParsed(j)
 
-    const profiles = (bIn.Profile || []).map(profile => ({
-      profileId: profile.id,
-      title: profile.title?.[0]?._ || profile.id,
-      description: profile.description?.[0]?._ || null,
-      selectedRuleCount: (profile.select || [])
-        .filter(s => s.selected === 'true' || s.selected === true).length
-    }))
+  const profiles = parseProfileDefs(bIn).map(p => ({
+    profileId: p.profileId,
+    title: p.title,
+    description: p.description,
+    selectedRuleCount: p.selectedIds.size
+  }))
 
-    return {
-      benchmarkId: bIn.id,
-      title: bIn.title?.[0]?._ || null,
-      profiles
-    }
-  }
-  catch (e) {
-    throw e
+  return {
+    benchmarkId: bIn.id,
+    title: bIn.title?.[0]?._ || null,
+    profiles
   }
 }

@@ -326,7 +326,10 @@ module.exports.initializeDatabase = async function () {
 module.exports.parseRevisionStr = function (revisionStr) {
   const ro = {}
   if (revisionStr !== 'latest') {
-    const results = /V(\d+)R(\d+(\.\d+)?)/.exec(revisionStr)
+    const results = /V([\d.]+)R([\d.]+(?:-[A-Za-z0-9_]+)?)/.exec(revisionStr)
+    if (!results) {
+      throw new Error(`Invalid revisionStr: ${revisionStr}`)
+    }
     ro.version = results[1]
     ro.release = results[2]
     ro.table = 'revision'

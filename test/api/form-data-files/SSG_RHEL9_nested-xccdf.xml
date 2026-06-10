@@ -1,0 +1,44 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<Benchmark xmlns="http://checklists.nist.gov/xccdf/1.2"
+           id="xccdf_org.ssgproject.content_benchmark_RHEL-9-nested"
+           resolved="true" xml:lang="en-US">
+  <status date="2024-01-15">draft</status>
+  <title>Nested Group Test Benchmark</title>
+  <description>Test benchmark with nested Group elements.</description>
+  <plain-text id="release-info">Release: 1 Benchmark Date: 15 Jan 2024</plain-text>
+  <version>0.1.71</version>
+
+  <Group id="xccdf_org.ssgproject.content_group_outer">
+    <title>Outer Group</title>
+    <description>A group that contains a nested sub-group with rules.</description>
+
+    <Group id="xccdf_org.ssgproject.content_group_inner">
+      <title>Inner Group</title>
+      <description>A nested sub-group containing rules.</description>
+
+      <Rule id="xccdf_org.ssgproject.content_rule_nested_rule_one" severity="medium" weight="10.0">
+        <version>RHEL-09-000001</version>
+        <title>Nested rule one title.</title>
+        <description>Nested rule one description.</description>
+        <ident system="https://public.cyber.mil/stigs/cci/">CCI-000001</ident>
+        <fixtext fixref="F-nested-001">Fix for nested rule one.</fixtext>
+        <fix id="F-nested-001"/>
+        <check system="http://oval.mitre.org/XMLSchema/oval-definitions-5">
+          <check-content-ref href="ssg-rhel9-oval.xml" name="oval:ssg-nested_rule_one:def:1"/>
+        </check>
+      </Rule>
+
+      <Rule id="xccdf_org.ssgproject.content_rule_nested_rule_two" severity="low" weight="10.0">
+        <version>RHEL-09-000002</version>
+        <title>Nested rule two title.</title>
+        <description>Nested rule two description.</description>
+        <ident system="https://public.cyber.mil/stigs/cci/">CCI-000002</ident>
+        <fixtext fixref="F-nested-002">Fix for nested rule two.</fixtext>
+        <fix id="F-nested-002"/>
+        <check system="http://oval.mitre.org/XMLSchema/oval-definitions-5">
+          <check-content-ref href="ssg-rhel9-oval.xml" name="oval:ssg-nested_rule_two:def:1"/>
+        </check>
+      </Rule>
+    </Group>
+  </Group>
+</Benchmark>
