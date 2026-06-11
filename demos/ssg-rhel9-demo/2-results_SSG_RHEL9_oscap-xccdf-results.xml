@@ -1,0 +1,81 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<Benchmark xmlns="http://checklists.nist.gov/xccdf/1.2" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" id="xccdf_org.ssgproject.content_benchmark_RHEL-9" resolved="1" xml:lang="en-US">
+  <status date="2024-01-15">draft</status>
+  <title xmlns:xhtml="http://www.w3.org/1999/xhtml" xml:lang="en-US">Guide to the Secure Configuration of Red Hat Enterprise Linux 9</title>
+  <description xmlns:xhtml="http://www.w3.org/1999/xhtml" xml:lang="en-US">This guide presents a catalog of security-relevant configuration settings for Red Hat Enterprise Linux 9.</description>
+  <plain-text id="release-info">Release: 1 Benchmark Date: 15 Jan 2024</plain-text>
+  <version>0.1.71</version>
+  <model system="urn:xccdf:scoring:default"/>
+  <Profile id="xccdf_org.ssgproject.content_profile_stig">
+    <title xmlns:xhtml="http://www.w3.org/1999/xhtml" xml:lang="en-US">DISA STIG for Red Hat Enterprise Linux 9</title>
+    <description xmlns:xhtml="http://www.w3.org/1999/xhtml" xml:lang="en-US">DISA STIG profile for RHEL 9</description>
+    <select idref="xccdf_org.ssgproject.content_rule_accounts_password_minlen_login_defs" selected="true"/>
+    <select idref="xccdf_org.ssgproject.content_rule_accounts_max_concurrent_login_sessions" selected="true"/>
+  </Profile>
+  <Profile id="xccdf_org.ssgproject.content_profile_cis_l1_server">
+    <title xmlns:xhtml="http://www.w3.org/1999/xhtml" xml:lang="en-US">CIS Red Hat Enterprise Linux 9 Benchmark for Level 1 - Server</title>
+    <description xmlns:xhtml="http://www.w3.org/1999/xhtml" xml:lang="en-US">CIS Level 1 Server profile for RHEL 9</description>
+    <select idref="xccdf_org.ssgproject.content_rule_accounts_max_concurrent_login_sessions" selected="true"/>
+  </Profile>
+  <Group id="xccdf_org.ssgproject.content_group_accounts">
+    <title xmlns:xhtml="http://www.w3.org/1999/xhtml" xml:lang="en-US">Protect Accounts by Restricting Password-Based Login</title>
+    <description xmlns:xhtml="http://www.w3.org/1999/xhtml" xml:lang="en-US">Overly-simple or commonly-used passwords provide attackers with access to systems.</description>
+    <Rule id="xccdf_org.ssgproject.content_rule_accounts_password_minlen_login_defs" selected="true" weight="10.000000" role="full" severity="medium">
+      <version>RHEL-09-611090</version>
+      <title xmlns:xhtml="http://www.w3.org/1999/xhtml" xml:lang="en-US">RHEL 9 must enforce a minimum 15-character password length.</title>
+      <description xmlns:xhtml="http://www.w3.org/1999/xhtml" xml:lang="en-US">The minimum password length must be at least 15 characters.</description>
+      <ident system="https://public.cyber.mil/stigs/cci/">CCI-000205</ident>
+      <fixtext xmlns:xhtml="http://www.w3.org/1999/xhtml" xml:lang="en-US" fixref="F-001_fix">Configure RHEL 9 to enforce a minimum 15-character password length by setting PASS_MIN_LEN to 15 in /etc/login.defs.</fixtext>
+      <fix xmlns:xhtml="http://www.w3.org/1999/xhtml" id="F-001_fix"/>
+      <check system="http://oval.mitre.org/XMLSchema/oval-definitions-5">
+        <check-content-ref name="oval:ssg-accounts_password_minlen_login_defs:def:1" href="ssg-rhel9-oval.xml"/>
+      </check>
+    </Rule>
+    <Rule id="xccdf_org.ssgproject.content_rule_accounts_max_concurrent_login_sessions" selected="true" weight="10.000000" role="full" severity="low">
+      <version>RHEL-09-412020</version>
+      <title xmlns:xhtml="http://www.w3.org/1999/xhtml" xml:lang="en-US">RHEL 9 must limit the number of concurrent sessions to 10.</title>
+      <description xmlns:xhtml="http://www.w3.org/1999/xhtml" xml:lang="en-US">Operating system management includes the ability to control the number of users and user sessions that utilize an operating system.</description>
+      <ident system="https://public.cyber.mil/stigs/cci/">CCI-000054</ident>
+      <fixtext xmlns:xhtml="http://www.w3.org/1999/xhtml" xml:lang="en-US" fixref="F-002_fix">Configure RHEL 9 to limit the number of concurrent sessions by adding: * hard maxlogins 10 to /etc/security/limits.conf.</fixtext>
+      <fix xmlns:xhtml="http://www.w3.org/1999/xhtml" id="F-002_fix"/>
+      <check system="http://oval.mitre.org/XMLSchema/oval-definitions-5">
+        <check-content-ref name="oval:ssg-accounts_max_concurrent_login_sessions:def:1" href="ssg-rhel9-oval.xml"/>
+      </check>
+    </Rule>
+  </Group>
+  <TestResult id="xccdf_org.open-scap_testresult_default-profile" start-time="2026-06-10T17:22:32+00:00" end-time="2026-06-10T17:22:32+00:00" version="0.1.71" test-system="cpe:/a:redhat:openscap:1.3.9">
+    <benchmark href="SSG_RHEL9_test-xccdf.xml" id="xccdf_org.ssgproject.content_benchmark_RHEL-9"/>
+    <title>OSCAP Scan Result</title>
+    <identity authenticated="false" privileged="false">root</identity>
+    <target>vm</target>
+    <target-address>127.0.0.1</target-address>
+    <target-address>192.0.2.2</target-address>
+    <target-facts>
+      <fact name="urn:xccdf:fact:scanner:name" type="string">OpenSCAP</fact>
+      <fact name="urn:xccdf:fact:scanner:version" type="string">1.3.9</fact>
+      <fact name="urn:xccdf:fact:asset:identifier:fqdn" type="string">vm</fact>
+      <fact name="urn:xccdf:fact:asset:identifier:host_name" type="string">vm</fact>
+      <fact name="urn:xccdf:fact:ethernet:MAC" type="string">00:00:00:00:00:00</fact>
+      <fact name="urn:xccdf:fact:asset:identifier:mac" type="string">00:00:00:00:00:00</fact>
+      <fact name="urn:xccdf:fact:ethernet:MAC" type="string">02:FC:00:00:00:01</fact>
+      <fact name="urn:xccdf:fact:asset:identifier:mac" type="string">02:FC:00:00:00:01</fact>
+      <fact name="urn:xccdf:fact:asset:identifier:ipv4" type="string">127.0.0.1</fact>
+      <fact name="urn:xccdf:fact:asset:identifier:ipv4" type="string">192.0.2.2</fact>
+    </target-facts>
+    <rule-result idref="xccdf_org.ssgproject.content_rule_accounts_password_minlen_login_defs" role="full" time="2026-06-10T17:22:32+00:00" severity="medium" version="RHEL-09-611090" weight="10.000000">
+      <result>pass</result>
+      <ident system="https://public.cyber.mil/stigs/cci/">CCI-000205</ident>
+      <check system="http://oval.mitre.org/XMLSchema/oval-definitions-5">
+        <check-content-ref name="oval:ssg-accounts_password_minlen_login_defs:def:1" href="ssg-rhel9-oval.xml"/>
+      </check>
+    </rule-result>
+    <rule-result idref="xccdf_org.ssgproject.content_rule_accounts_max_concurrent_login_sessions" role="full" time="2026-06-10T17:22:32+00:00" severity="low" version="RHEL-09-412020" weight="10.000000">
+      <result>fail</result>
+      <ident system="https://public.cyber.mil/stigs/cci/">CCI-000054</ident>
+      <check system="http://oval.mitre.org/XMLSchema/oval-definitions-5">
+        <check-content-ref name="oval:ssg-accounts_max_concurrent_login_sessions:def:1" href="ssg-rhel9-oval.xml"/>
+      </check>
+    </rule-result>
+    <score system="urn:xccdf:scoring:default" maximum="100.000000">50.000000</score>
+  </TestResult>
+</Benchmark>
