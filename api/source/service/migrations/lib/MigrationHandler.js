@@ -15,6 +15,9 @@ module.exports = class MigrationHandler {
         try {
           logger.writeInfo('mysql', 'migration', {status: 'start', direction: 'up', name: migrationName })
           connection = await pool.getConnection()
+          // pooled connections can be returned with namedPlaceholders still enabled by a
+          // previous holder, which breaks statements containing colons (e.g. procedure labels)
+          connection.config.namedPlaceholders = false
           for (const statement of this._upCommands) {
             logger.writeInfo('mysql', 'migration', {status: 'running', name: migrationName, statement })
             await connection.query(statement)
@@ -36,6 +39,7 @@ module.exports = class MigrationHandler {
         try {
           logger.writeInfo('mysql', 'migration', {status: 'start', direction: 'down', name: migrationName })
           connection = await pool.getConnection()
+          connection.config.namedPlaceholders = false
           for (const statement of this._downCommands) {
             logger.writeInfo('mysql', 'migration', {status: 'running', name: migrationName, statement })
             await connection.query(statement)
