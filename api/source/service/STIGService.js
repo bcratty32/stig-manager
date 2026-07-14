@@ -1466,3 +1466,38 @@ exports.getHighestMarkingByRevisions = async function (stigRevisions) {
   
   return rows[0].marking || 'U'
 }
+
+exports.getScapMap = async function () {
+  const [rows] = await dbUtils.pool.query(
+    'SELECT scapBenchmarkId, benchmarkId FROM scap_benchmark_map ORDER BY scapBenchmarkId')
+  return rows
+}
+
+exports.putScapMap = async function (scapMaps, svcStatus = {}) {
+  let connection
+  try {
+    connection = await dbUtils.pool.getConnection()
+    async function transaction () {
+      await connection.query('START TRANSACTION')
+      await connection.query('DELETE FROM scap_benchmark_map')
+      if (scapMaps.length) {
+        const binds = scapMaps.map(m => [m.scapBenchmarkId, m.benchmarkId])
+        await connection.query(
+          'INSERT INTO scap_benchmark_map (scapBenchmarkId, benchmarkId) VALUES ?', [binds])
+      }
+      await connection.commit()
+    }
+    await dbUtils.retryOnDeadlock(transaction, svcStatus)
+  }
+  catch (err) {
+    if (typeof connection !== 'undefined') {
+      await connection.rollback()
+    }
+    throw (err)
+  }
+  finally {
+    if (typeof connection !== 'undefined') {
+      await connection.release()
+    }
+  }
+}

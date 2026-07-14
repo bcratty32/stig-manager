@@ -261,31 +261,32 @@ module.exports.getStigById = async function getStigById (req, res, next) {
   }
 }
 
-module.exports.getScapMap = async function getStigById (req, res, next) {
-  res.json([
-    {
-      scapBenchmarkId: 'CAN_Ubuntu_18-04_STIG',
-      benchmarkId: 'U_CAN_Ubuntu_18-04_STIG'
-    },
-    {
-      scapBenchmarkId: 'Mozilla_Firefox_RHEL',
-      benchmarkId: 'Mozilla_Firefox'
-    },
-    {
-      scapBenchmarkId: 'Mozilla_Firefox_Windows',
-      benchmarkId: 'Mozilla_Firefox'
-    },
-    {
-      scapBenchmarkId: 'MOZ_Firefox_Linux',
-      benchmarkId: 'MOZ_Firefox_STIG'
-    },
-    {
-      scapBenchmarkId: 'MOZ_Firefox_Windows',
-      benchmarkId: 'MOZ_Firefox_STIG'
-    },    
-    {
-      scapBenchmarkId: 'Solaris_10_X86_STIG',
-      benchmarkId: 'Solaris_10_X86'
+module.exports.getScapMap = async function getScapMap (req, res, next) {
+  try {
+    const response = await STIGService.getScapMap()
+    res.json(response)
+  }
+  catch(err) {
+    next(err)
+  }
+}
+
+module.exports.putScapMap = async function putScapMap (req, res, next) {
+  try {
+    if (!req.query.elevate) throw new SmError.PrivilegeError()
+    const scapMaps = req.body
+    const seen = new Set()
+    for (const map of scapMaps) {
+      if (seen.has(map.scapBenchmarkId)) {
+        throw new SmError.ClientError(`Duplicate scapBenchmarkId: ${map.scapBenchmarkId}`)
+      }
+      seen.add(map.scapBenchmarkId)
     }
-  ])
+    await STIGService.putScapMap(scapMaps, res.svcStatus)
+    const response = await STIGService.getScapMap()
+    res.json(response)
+  }
+  catch(err) {
+    next(err)
+  }
 }

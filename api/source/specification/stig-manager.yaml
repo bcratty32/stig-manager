@@ -3946,6 +3946,42 @@ paths:
       security:
         - oauth:
             - 'stig-manager:stig:read'
+    put:
+      tags:
+        - STIG
+      summary: Replace the SCAP benchmark map
+      description: Replaces the entire list of SCAP-to-Manual benchmarkId mappings. Elevate required.
+      operationId: putScapMap
+      parameters:
+        - $ref: '#/components/parameters/ElevateQuery'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: array
+              items:
+                $ref: '#/components/schemas/SCAPMap'
+      responses:
+        '200':
+          description: SCAP Map response
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/SCAPMap'
+        default:
+          description: unexpected error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+      security:
+        - oauth:
+            - 'stig-manager:stig'
+      x-rbac:
+        - admin
   '/stigs/{benchmarkId}':
     get:
       tags:
@@ -9242,12 +9278,19 @@ components:
       $ref: '#/components/schemas/StringMax'
     SCAPMap:
       additionalProperties: false
+      required:
+        - benchmarkId
+        - scapBenchmarkId
       type: object
       properties:
         benchmarkId:
-          $ref: '#/components/schemas/BenchmarkId'
+          type: string
+          minLength: 1
+          maxLength: 255
         scapBenchmarkId:
           type: string
+          minLength: 1
+          maxLength: 255
     STIG:
       additionalProperties: false
       type: object
