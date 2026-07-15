@@ -1,5 +1,10 @@
 # Demo Files for STIG Manager Upload Testing
 
+> **Full local walkthrough:** see [DEMO-WALKTHROUGH.md](./DEMO-WALKTHROUGH.md) for
+> step-by-step instructions to run STIG Manager locally, import real
+> ComplianceAsCode data streams, scan a Docker image with OpenSCAP, and upload the
+> results.
+
 Two self-contained demo sets. In each set, upload the `1-baseline_*` file first
 (it creates the benchmark in STIG Manager), then import the matching `2-results_*`
 file(s) against an asset assigned to that benchmark.
