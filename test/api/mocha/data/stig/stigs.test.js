@@ -12,6 +12,24 @@ import deepEqualInAnyOrder from 'deep-equal-in-any-order'
 import {use, expect} from 'chai'
 use(deepEqualInAnyOrder)
 
+// Seed data from migration 0048.js
+const scapMapSeed = [
+    { scapBenchmarkId: 'CAN_Ubuntu_18-04_STIG', benchmarkId: 'U_CAN_Ubuntu_18-04_STIG' },
+    { scapBenchmarkId: 'Mozilla_Firefox_RHEL', benchmarkId: 'Mozilla_Firefox' },
+    { scapBenchmarkId: 'Mozilla_Firefox_Windows', benchmarkId: 'Mozilla_Firefox' },
+    { scapBenchmarkId: 'MOZ_Firefox_Linux', benchmarkId: 'MOZ_Firefox_STIG' },
+    { scapBenchmarkId: 'MOZ_Firefox_Windows', benchmarkId: 'MOZ_Firefox_STIG' },
+    { scapBenchmarkId: 'Solaris_10_X86_STIG', benchmarkId: 'Solaris_10_X86' },
+    { scapBenchmarkId: 'xccdf_org.ssgproject.content_benchmark_RHEL-8', benchmarkId: 'RHEL_8_STIG' },
+    { scapBenchmarkId: 'xccdf_org.ssgproject.content_benchmark_RHEL-9', benchmarkId: 'RHEL_9_STIG' },
+    { scapBenchmarkId: 'xccdf_org.ssgproject.content_benchmark_OL-8', benchmarkId: 'OL_8_STIG' },
+    { scapBenchmarkId: 'xccdf_org.ssgproject.content_benchmark_OL-9', benchmarkId: 'OL_9_STIG' },
+    { scapBenchmarkId: 'xccdf_org.ssgproject.content_benchmark_UBUNTU_20-04', benchmarkId: 'CAN_Ubuntu_20-04_LTS_STIG' },
+    { scapBenchmarkId: 'xccdf_org.ssgproject.content_benchmark_UBUNTU_22-04', benchmarkId: 'CAN_Ubuntu_22-04_LTS_STIG' },
+    { scapBenchmarkId: 'xccdf_org.ssgproject.content_benchmark_SLE-15', benchmarkId: 'SLES_15_STIG' },
+    { scapBenchmarkId: 'xccdf_org.ssgproject.content_benchmark_FIREFOX', benchmarkId: 'MOZ_Firefox_STIG' }
+]
+
 describe('GET - Stig', () => {
 
     before(async function () {
@@ -144,33 +162,54 @@ describe('GET - Stig', () => {
                 it('Return a list of SCAP maps', async () => {
                     const res = await utils.executeRequest(`${config.baseUrl}/stigs/scap-maps`, 'GET', iteration.token)
                     expect(res.status).to.eql(200)
-                    expect(res.body).to.deep.equalInAnyOrder([
-                        {
-                        scapBenchmarkId: 'CAN_Ubuntu_18-04_STIG',
-                        benchmarkId: 'U_CAN_Ubuntu_18-04_STIG'
-                        },
-                        {
-                        scapBenchmarkId: 'Mozilla_Firefox_RHEL',
-                        benchmarkId: 'Mozilla_Firefox'
-                        },
-                        {
-                        scapBenchmarkId: 'Mozilla_Firefox_Windows',
-                        benchmarkId: 'Mozilla_Firefox'
-                        },
-                        {
-                        scapBenchmarkId: 'MOZ_Firefox_Linux',
-                        benchmarkId: 'MOZ_Firefox_STIG'
-                        },
-                        {
-                        scapBenchmarkId: 'MOZ_Firefox_Windows',
-                        benchmarkId: 'MOZ_Firefox_STIG'
-                        },    
-                        {
-                        scapBenchmarkId: 'Solaris_10_X86_STIG',
-                        benchmarkId: 'Solaris_10_X86'
-                        }
-                    ])
+                    expect(res.body).to.deep.equalInAnyOrder(scapMapSeed)
                 })
+            })
+            describe('PUT - putScapMap - /stigs/scap-maps', () => {
+                if (iteration.name === 'stigmanadmin') {
+                    it('Replace the SCAP map and return the stored map', async () => {
+                        const customMap = [
+                            { scapBenchmarkId: 'Custom_SCAP_Benchmark', benchmarkId: 'Custom_STIG' }
+                        ]
+                        const res = await utils.executeRequest(`${config.baseUrl}/stigs/scap-maps?elevate=true`, 'PUT', iteration.token, customMap)
+                        expect(res.status).to.eql(200)
+                        expect(res.body).to.deep.equalInAnyOrder(customMap)
+
+                        const resGet = await utils.executeRequest(`${config.baseUrl}/stigs/scap-maps`, 'GET', iteration.token)
+                        expect(resGet.status).to.eql(200)
+                        expect(resGet.body).to.deep.equalInAnyOrder(customMap)
+                    })
+                    it('Reject PUT without elevate', async () => {
+                        const res = await utils.executeRequest(`${config.baseUrl}/stigs/scap-maps`, 'PUT', iteration.token, scapMapSeed)
+                        expect(res.status).to.eql(403)
+                    })
+                    it('Reject PUT with duplicate scapBenchmarkId', async () => {
+                        const dupMap = [
+                            { scapBenchmarkId: 'Dup_Benchmark', benchmarkId: 'STIG_A' },
+                            { scapBenchmarkId: 'Dup_Benchmark', benchmarkId: 'STIG_B' }
+                        ]
+                        const res = await utils.executeRequest(`${config.baseUrl}/stigs/scap-maps?elevate=true`, 'PUT', iteration.token, dupMap)
+                        expect(res.status).to.eql(400)
+                    })
+                    it('Reject PUT with missing benchmarkId', async () => {
+                        const badMap = [
+                            { scapBenchmarkId: 'Missing_Target' }
+                        ]
+                        const res = await utils.executeRequest(`${config.baseUrl}/stigs/scap-maps?elevate=true`, 'PUT', iteration.token, badMap)
+                        expect(res.status).to.eql(400)
+                    })
+                    it('Restore the seeded SCAP map', async () => {
+                        const res = await utils.executeRequest(`${config.baseUrl}/stigs/scap-maps?elevate=true`, 'PUT', iteration.token, scapMapSeed)
+                        expect(res.status).to.eql(200)
+                        expect(res.body).to.deep.equalInAnyOrder(scapMapSeed)
+                    })
+                }
+                else {
+                    it('Reject PUT from non-admin user', async () => {
+                        const res = await utils.executeRequest(`${config.baseUrl}/stigs/scap-maps?elevate=true`, 'PUT', iteration.token, scapMapSeed)
+                        expect(res.status).to.eql(403)
+                    })
+                }
             })
             describe('GET - getStigById - /stigs/{benchmarkId}', () => {
 
