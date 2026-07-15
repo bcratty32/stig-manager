@@ -66,8 +66,10 @@ function parseReleaseInfo(bIn) {
     const [, release, benchmarkDate] = releaseMatch
     return { release, benchmarkDate, benchmarkDate8601: benchmarkDateTo8601(benchmarkDate) }
   }
-  // Fallback for SSG and other non-DISA benchmarks
-  const release = bIn.version?.[0]?._ || '1'
+  // Fallback for SSG and other non-DISA benchmarks. The benchmark <version>
+  // becomes revision.version, so a constant release of '1' keeps revisionStr
+  // readable (V0.1.71R1) — profile filtering appends its own suffix.
+  const release = '1'
   const rawDate = bIn.status?.[0]?.date || null
   // Strip time component if present (e.g., "2024-01-15T10:00:00" → "2024-01-15")
   const benchmarkDate8601 = rawDate ? rawDate.split('T')[0] : null
@@ -118,6 +120,14 @@ function parseRuleDescription(d) {
   return parsed
 }
 
+// STIG Manager keys reviews on (version, checkDigest). SSG rules often have no
+// <version> element, so fall back to the short rule name (stable across SSG
+// releases), truncated to fit the version column (varchar(45)).
+function fallbackRuleVersion(ruleId) {
+  if (!ruleId) return null
+  return ruleId.replace(/^xccdf_.*?_rule_/, '').slice(0, 45)
+}
+
 function mapRule(rule) {
   const checks = rule.check ? rule.check.map(check => ({
     system: check.system,
@@ -140,7 +150,7 @@ function mapRule(rule) {
 
   return {
     ruleId: rule.id,
-    version: rule.version?.[0]?._ || null,
+    version: rule.version?.[0]?._ || fallbackRuleVersion(rule.id),
     title: rule.title?.[0]?._ || null,
     severity: rule.severity || null,
     weight: rule.weight || null,

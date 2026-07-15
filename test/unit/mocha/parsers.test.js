@@ -111,6 +111,41 @@ describe('parsers.benchmarkFromXccdf - SCAP data stream', () => {
   })
 })
 
+describe('parsers.benchmarkFromXccdf - CaC-style benchmarks (no release-info, no rule versions)', () => {
+
+  const cacXml = `<?xml version="1.0" encoding="UTF-8"?>
+<Benchmark xmlns="http://checklists.nist.gov/xccdf/1.2" id="xccdf_org.ssgproject.content_benchmark_TEST" resolved="true">
+  <status date="2023-12-16">draft</status>
+  <title>CaC-style Test Benchmark</title>
+  <version>0.1.71</version>
+  <Group id="xccdf_org.ssgproject.content_group_test">
+    <title>Test Group</title>
+    <Rule id="xccdf_org.ssgproject.content_rule_package_prelink_removed" severity="medium">
+      <title>Package prelink removed</title>
+      <description>Remove prelink.</description>
+      <check system="http://oval.mitre.org/XMLSchema/oval-definitions-5">
+        <check-content-ref href="oval.xml" name="oval:ssg-package_prelink_removed:def:1"/>
+      </check>
+    </Rule>
+  </Group>
+</Benchmark>`
+
+  it('should default release to 1 when no DISA release-info exists', () => {
+    const result = benchmarkFromXccdf(cacXml)
+    expect(result.revision.revisionStr).to.equal('V0.1.71R1')
+    expect(result.revision.version).to.equal('0.1.71')
+    expect(result.revision.release).to.equal('1')
+    expect(result.revision.benchmarkDate8601).to.equal('2023-12-16')
+  })
+
+  it('should fall back to short rule name when rule has no version element', () => {
+    const result = benchmarkFromXccdf(cacXml)
+    const rule = result.revision.groups[0].rules[0]
+    expect(rule.version).to.equal('package_prelink_removed')
+    expect(rule.version.length).to.be.at.most(45)
+  })
+})
+
 describe('parsers.benchmarkFromXccdf - nested SSG groups', () => {
 
   it('should collect rules from nested groups into the parent group', () => {

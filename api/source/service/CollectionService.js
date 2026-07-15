@@ -1075,22 +1075,19 @@ Asset Id - if provided, only delete entries for that asset.
 */
 exports.deleteReviewHistoryByCollection = async function (collectionId, retentionDate, assetId) {
   let sql = `
-    DELETE rh 
-    FROM review_history rh 
+    DELETE rh
+    FROM review_history rh
       INNER JOIN review r on rh.reviewId = r.reviewId
       INNER JOIN enabled_asset a on r.assetId = a.assetId
-    WHERE a.collectionId = :collectionId
-      AND rh.touchTs < :retentionDate`
+    WHERE a.collectionId = ?
+      AND rh.touchTs < ?`
+
+  const binds = [collectionId, retentionDate]
 
   if(assetId) {
-    sql += ' AND a.assetId = :assetId'
+    sql += ' AND a.assetId = ?'
+    binds.push(assetId)
   }
-
-  let binds = {
-    collectionId: collectionId,
-    retentionDate: retentionDate,
-    assetId: assetId
-  }  
 
   let [rows] = await dbUtils.pool.query(sql, binds)
   let result = {
@@ -1208,14 +1205,12 @@ Projection: asset - Break out statistics by Asset in the specified collection
 */
 exports.getReviewHistoryStatsByCollection = async function (collectionId, startDate, endDate, assetId, ruleId, status, projection) {
 
-  let binds = {
-    collectionId: collectionId
-  }
+  const includeAssetProjection = projection?.includes('asset')
 
   let sql = 'SELECT COUNT(*) as collectionHistoryEntryCount, MIN(rh.touchTs) as oldestHistoryEntryDate'
-  
+
   // If there is a response and the request included the asset projection
-  if (projection?.includes('asset')) {
+  if (includeAssetProjection) {
     sql += `, coalesce(
       (SELECT json_arrayagg(
         json_object(
@@ -1224,13 +1219,13 @@ exports.getReviewHistoryStatsByCollection = async function (collectionId, startD
           'oldestHistoryEntry', oldestHistoryEntry
           )
         )
-        FROM 
+        FROM
         (
           SELECT a.assetId, COUNT(*) as historyEntryCount, MIN(rh.touchTs) as oldestHistoryEntry
           FROM review_history rh
             INNER JOIN review rv on rh.reviewId = rv.reviewId
             INNER JOIN enabled_asset a on rv.assetId = a.assetId
-          WHERE a.collectionId = :collectionId
+          WHERE a.collectionId = ?
           additionalPredicates
           GROUP BY a.assetId
         ) v
@@ -1242,38 +1237,44 @@ exports.getReviewHistoryStatsByCollection = async function (collectionId, startD
     FROM review_history rh
       INNER JOIN review rv on rh.reviewId = rv.reviewId
       INNER JOIN enabled_asset a on rv.assetId = a.assetId
-    WHERE a.collectionId = :collectionId
+    WHERE a.collectionId = ?
     additionalPredicates
   `
 
   let additionalPredicates = ""
+  const predicateBinds = []
 
   if (startDate) {
-    binds.startDate = startDate
-    additionalPredicates += " AND rh.touchTs >= :startDate"
+    predicateBinds.push(startDate)
+    additionalPredicates += " AND rh.touchTs >= ?"
   }
 
   if (endDate) {
-    binds.endDate = endDate
-    additionalPredicates += " AND rh.touchTs <= :endDate"
+    predicateBinds.push(endDate)
+    additionalPredicates += " AND rh.touchTs <= ?"
   }
 
   if(ruleId) {
-    binds.ruleId = ruleId
-    additionalPredicates += " AND rv.ruleId = :ruleId"
+    predicateBinds.push(ruleId)
+    additionalPredicates += " AND rv.ruleId = ?"
   }
 
   if(status) {
-    binds.statusId = dbUtils.REVIEW_STATUS_API[status]
-    additionalPredicates += ' AND rh.statusId = :statusId'
+    predicateBinds.push(dbUtils.REVIEW_STATUS_API[status])
+    additionalPredicates += ' AND rh.statusId = ?'
   }
-  
+
   if(assetId) {
-    binds.assetId = assetId
-    additionalPredicates += " AND a.assetId = :assetId"
+    predicateBinds.push(assetId)
+    additionalPredicates += " AND a.assetId = ?"
   }
 
   sql = sql.replace(/additionalPredicates/g, additionalPredicates)
+
+  // the collectionId + predicate binds appear twice when the asset projection subquery is present
+  const binds = includeAssetProjection
+    ? [collectionId, ...predicateBinds, collectionId, ...predicateBinds]
+    : [collectionId, ...predicateBinds]
 
   let [rows] = await dbUtils.pool.query(sql, binds)
   return (rows[0])

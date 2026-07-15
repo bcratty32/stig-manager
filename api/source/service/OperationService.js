@@ -403,6 +403,7 @@ exports.replaceAppData = async function (buffer, contentType, progressCb = () =>
 
   async function resetDatabase() {
     const connection = await dbUtils.pool.getConnection()
+    connection.config.namedPlaceholders = false
     const sql = `SELECT
     table_name,
     table_type
@@ -441,6 +442,7 @@ exports.replaceAppData = async function (buffer, contentType, progressCb = () =>
   let connection
   try {
     connection = await dbUtils.pool.getConnection()
+    connection.config.namedPlaceholders = false
     await connection.query('SET FOREIGN_KEY_CHECKS=0')
     const jsonl = new ParseJSONLStream({jsonParser: BJSON.parse})
     const queries = new AppDataQueryStream({maxValues: 10000, onTablesFn: progressCb, onMigrationFn})

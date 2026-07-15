@@ -982,7 +982,7 @@ FROM
     @reviews,
     "$[*]"
     COLUMNS(
-    ruleId VARCHAR(45) PATH "$.ruleId",
+    ruleId VARCHAR(255) PATH "$.ruleId",
     result VARCHAR(255) PATH "$.result",
     detail MEDIUMTEXT PATH "$.detail" NULL ON EMPTY,
     comment MEDIUMTEXT PATH "$.comment",

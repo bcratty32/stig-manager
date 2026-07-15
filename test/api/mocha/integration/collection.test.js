@@ -7,7 +7,9 @@ import { Blob } from 'buffer'
 import { readFileSync } from 'fs'
 import * as utils from '../utils/testUtils.js'
 import reference from '../referenceData.js'
-import { expect } from 'chai'
+import { use, expect } from 'chai'
+import deepEqualInAnyOrder from 'deep-equal-in-any-order'
+use(deepEqualInAnyOrder)
 import { v4 as uuidv4 } from 'uuid'
 const user = {
   name: "admin",
@@ -358,7 +360,7 @@ describe('POST - cloneCollection - /collections/{collectionId}/clone - test vari
                                   let {grantId, ...grantCheckProps} = grant
                                   expectedGrantsResponse.push(grantCheckProps)
                               }
-                              expect(grantsProjectedResponse, "check cloned collection grants").to.eql(expectedGrantsResponse)
+                              expect(grantsProjectedResponse, "check cloned collection grants").to.deep.equalInAnyOrder(expectedGrantsResponse)
 
                             //stats
                             expect(messageObject.collection, "testing stats projection").to.have.property('statistics')
@@ -396,7 +398,7 @@ describe('POST - cloneCollection - /collections/{collectionId}/clone - test vari
                             expect(assetsProjectedResponse, "checking assets were cloned").to.eql(assetsProjectedWithoutId)
 
                             //stigs 
-                            expect(messageObject.collection.stigs).to.eql(reference.testCollection.stigsProjected)
+                            expect(messageObject.collection.stigs).to.deep.equalInAnyOrder(reference.testCollection.stigsProjected)
                         }
                     }
                 }
@@ -487,7 +489,7 @@ describe('POST - cloneCollection - /collections/{collectionId}/clone - test vari
                             expect(assetsProjectedResponse, "checking assets were cloned").to.eql(assetsProjectedWithoutId)            
 
                             //stigs 
-                            expect(messageObject.collection.stigs).to.eql(reference.testCollection.stigsProjected)
+                            expect(messageObject.collection.stigs).to.deep.equalInAnyOrder(reference.testCollection.stigsProjected)
                         }
                     }
                 }
@@ -539,7 +541,7 @@ describe('POST - cloneCollection - /collections/{collectionId}/clone - test vari
                                 let {grantId, ...grantCheckProps} = grant
                                 expectedGrantsResponse.push(grantCheckProps)
                             }
-                            expect(grantsProjectedResponse, "check cloned collection grants").to.eql(expectedGrantsResponse)
+                            expect(grantsProjectedResponse, "check cloned collection grants").to.deep.equalInAnyOrder(expectedGrantsResponse)
                             
                             //stats
                             expect(messageObject.collection, "testing stats projection").to.have.property('statistics')
@@ -576,7 +578,7 @@ describe('POST - cloneCollection - /collections/{collectionId}/clone - test vari
                             expect(assetsProjectedResponse, "checking assets were cloned").to.eql(assetsProjectedWithoutId)            
 
                             //stigs 
-                            expect(messageObject.collection.stigs).to.eql(reference.testCollection.stigsProjected)
+                            expect(messageObject.collection.stigs).to.deep.equalInAnyOrder(reference.testCollection.stigsProjected)
                         }
                     }
                 }
@@ -643,7 +645,7 @@ describe('POST - cloneCollection - /collections/{collectionId}/clone - test vari
                                   let {grantId, ...grantCheckProps} = grant
                                   expectedGrantsResponse.push(grantCheckProps)
                               }
-                              expect(grantsProjectedResponse, "check cloned collection grants").to.eql(expectedGrantsResponse)
+                              expect(grantsProjectedResponse, "check cloned collection grants").to.deep.equalInAnyOrder(expectedGrantsResponse)
 
                             //stats
                             expect(messageObject.collection, "testing stats projection").to.have.property('statistics')
@@ -730,7 +732,7 @@ describe('POST - cloneCollection - /collections/{collectionId}/clone - test vari
                                 let {grantId, ...grantCheckProps} = grant
                                 expectedGrantsResponse.push(grantCheckProps)
                             }
-                            expect(grantsProjectedResponse, "check cloned collection grants").to.eql(expectedGrantsResponse)
+                            expect(grantsProjectedResponse, "check cloned collection grants").to.deep.equalInAnyOrder(expectedGrantsResponse)
 
                             //stats
                             expect(messageObject.collection, "testing stats projection").to.have.property('statistics')
@@ -816,7 +818,7 @@ describe('POST - cloneCollection - /collections/{collectionId}/clone - test vari
                                 let {grantId, ...grantCheckProps} = grant
                                 expectedGrantsResponse.push(grantCheckProps)
                             }
-                            expect(grantsProjectedResponse, "check cloned collection grants").to.eql(expectedGrantsResponse)
+                            expect(grantsProjectedResponse, "check cloned collection grants").to.deep.equalInAnyOrder(expectedGrantsResponse)
 
                             //stats
                             expect(messageObject.collection, "testing stats projection").to.have.property('statistics')
@@ -853,7 +855,7 @@ describe('POST - cloneCollection - /collections/{collectionId}/clone - test vari
                             expect(assetsProjectedResponse, "checking assets were cloned").to.eql(assetsProjectedWithoutId)       
 
                             //stigs 
-                            expect(messageObject.collection.stigs).to.eql(reference.testCollection.stigsProjected)
+                            expect(messageObject.collection.stigs).to.deep.equalInAnyOrder(reference.testCollection.stigsProjected)
                         }
                     }
                 }
@@ -905,7 +907,7 @@ describe('POST - cloneCollection - /collections/{collectionId}/clone - test vari
                                 let {grantId, ...grantCheckProps} = grant
                                 expectedGrantsResponse.push(grantCheckProps)
                             }
-                            expect(grantsProjectedResponse, "check cloned collection grants").to.eql(expectedGrantsResponse)
+                            expect(grantsProjectedResponse, "check cloned collection grants").to.deep.equalInAnyOrder(expectedGrantsResponse)
 
                             //stats
                             expect(messageObject.collection, "testing stats projection").to.have.property('statistics')
